@@ -57,4 +57,15 @@ public class EmailController {
         return Result.ok("成功");
     }
 
+    /*退房发送邮件*/
+    @ApiOperation(value = "退房发送邮件")
+    @RequestMapping(value = "/sendEmailCheckOut", method = RequestMethod.GET)
+    public Result<?> sendEmailCheckOut(String accnt,String roomNo) {
+        //客房邮箱
+        String TO="longxikefang2020@163.com";
+        String[] TOS=TO.split(",");
+        EmailUtil.send("账号为"+accnt+"，房间号为"+roomNo+"的客人已在自助机上办理退房。",
+                HOST,FROM,"",AFFIXNAME,USER,PWD,"客人退房提醒。",TOS);
+        return Result.ok("成功");
+    }
 }

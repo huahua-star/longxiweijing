@@ -69,6 +69,9 @@ public class GetArrivingReservationController {
 
     private final String checkoutQueue = "checkoutQueue";
 
+    @Autowired
+    private EmailController emailController;
+
     /**
      * 订单留存测试
      */
@@ -520,15 +523,6 @@ public class GetArrivingReservationController {
     public CommonResult<?> GuestRemoteCheckOut(String accnt, String masterremark, String billremark, String cardno, String expiry,
                                                String pccode, String amount, String foliono, String resno, String roomno,String name) {
         log.info("进入GuestRemoteCheckOut()方法");
-        /*String flag = getArrivingReservation.XmlToJavaBean(resno, roomno,name,accnt);
-        if ("2".equals(flag)) {
-            log.error("GuestRemoteCheckOut()方法失败");
-            return CommonResult.failed("客人已退房！");
-        }
-        if ("0".equals(flag)) {
-            log.error("GuestRemoteCheckOut()方法失败");
-            return CommonResult.failed("有同住人无法退房");
-        }*/
         String tom = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<interface>\n" +
                 "<item>\n" +
@@ -582,9 +576,11 @@ public class GetArrivingReservationController {
             operationRecord.setOperationDes("接口名字为:GuestRemoteCheckOut,账号为:"+newReservation.getAccnt()+"，姓名为:"+newReservation.getName()+"的客人，在"+operationRecord.getCreateTime()+"在自助机办理退房。");
             operationRecord.setResno(newReservation.getAccnt());
             operationRecordService.save(operationRecord);
-
+            //退房弹框提醒
             String checkoutStr = newReservation.getRoomno()+"有客人离店，请处理。";
             rabbitHelper.startThread(this.rabbitTemplate,checkoutQueue,checkoutStr);
+            //发送邮件告知酒店有客人退房
+            emailController.sendEmailCheckOut(accnt,roomno);
 
             return CommonResult.success(jsonData);
         }else{
@@ -1548,6 +1544,8 @@ public class GetArrivingReservationController {
 
             String checkoutStr = newReservation.getRoomno()+"有客人离店，请处理。";
             rabbitHelper.startThread(this.rabbitTemplate,checkoutQueue,checkoutStr);
+            //发送邮件告知酒店有客人退房
+            emailController.sendEmailCheckOut(accnt,newReservation.getRoomno());
             return CommonResult.success(jsons);
         }else{
             OperationRecord operationRecord=new OperationRecord();
@@ -1803,6 +1801,8 @@ public class GetArrivingReservationController {
             operationRecordService.save(operationRecord);
             String checkoutStr = newReservation.getRoomno()+"有客人离店，请处理。";
             rabbitHelper.startThread(this.rabbitTemplate,checkoutQueue,checkoutStr);
+            //发送邮件告知酒店有客人退房
+            emailController.sendEmailCheckOut(accnt,newReservation.getRoomno());
             return CommonResult.success(jsonData);
         }else{
             OperationRecord operationRecord=new OperationRecord();
